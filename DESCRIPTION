@@ -1,0 +1,14 @@
+Package: jackstrap
+Type: Package
+Title: Jackstrap Sousa & Stosic (2005) (Outliers in DEA)
+Version: 0.1.0
+Author: Kleber Morais de Sousa, Maria da Conceição Sampaio de Sousa, Paulo Aguiar do Monte
+Maintainer: Kleber Morais de Sousa <kleberfinancas@gmail.com>
+Description: This package applies the method developed by Sousa and Stosic (2005) Technical Efficiency of the Brazilian Municipalities: Correcting Nonparametric Frontier Mesurements For Outliers. Journal of Productivity Analysis, 24, 147-181.
+Depends: R (>= 2.15.1), fBasics, Benchmarking, dplyr, ggplot2, foreach, doParallel, reshape, tidyr
+License: GPL-3
+Encoding: UTF-8
+LazyData: TRUE
+RoxygenNote: 6.1.1
+Suggests: knitr, rmarkdown
+VignetteBuilder: knitr

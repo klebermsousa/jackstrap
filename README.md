@@ -24,7 +24,7 @@ The function jackstrap_ks is usefull to get efficiency index with criteria K-S t
 ```{r}
 efficiency_ks <- jackstrap_ks (data=municipalities, jackstrap_obj=efficiency, num_cores = 4, perc = 0.80)
 ```
-It's relevant to pay attention that the package jackstrap doesn't support multicore in Windows.
+It's relevant to pay attention that the package jackstrap doesn't support multicore in Windows. Besides that, the users need to organize the data in this sequence: dmu_name, cod, output variables and input variables. The field "cod"" must be the exact name "cod" and integer type in second column.
 
 More informations you can get in manual (manual jackstrap.pdf) localized in the vignettes folder.
 

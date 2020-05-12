@@ -121,8 +121,8 @@ jackstrap <- function(data, ycolumn, xcolumn, bootstrap=1000, perc_sample_bubble
 
     dmu <- serial[i,]
 
-    print(b)
-    print(i)
+    # print(b)
+    # print(i)
 
     x <- x[-i,]
     y <- y[-i,]

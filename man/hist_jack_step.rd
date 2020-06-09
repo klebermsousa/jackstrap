@@ -3,7 +3,7 @@
 \name{hist_jack_step}
 \alias{hist_jack_step}
 \title{Histogram with Jackstrap Efficiency Indicators:  This function builds a graphic with indicator distributions
-without outliers and complete sample. The outliers are defined by heaviside step function.}
+without outliers and complete sample. The outliers are defined by heaviside step function method.}
 \usage{
 hist_jack_step(efficiency, model_hist_step)
 }
@@ -22,8 +22,20 @@ Histogram with Jackstrap Efficiency Indicators:  This function builds a graphic 
 without outliers and complete sample. The outliers are defined by heaviside step function method.
 }
 \examples{
-hist_jack_step(efficiency, 1)
-hist_jack_step(efficiency, 2)
-hist_jack_step(efficiency, 3)
-hist_jack_step(efficiency, 4)
+ \dontshow{
+   library(jackstrap)
+   test_data <- data.frame(mun=c(1:10), cod=c(1:10), y=c(5,7,6,7,4,6,8,9,3,1),
+                          x=c(7,8,10,22,15,7,22,17,10,5))
+   effic_test <- jackstrap (data=test_data, ycolumn=1, xcolumn=1, bootstrap=1,
+                  perc_sample_bubble=1, dea_method="crs", orientation_dea="in",
+                 n_seed = 2000, repos=FALSE, num_cores=1)
+   plot_step <- hist_jack_step(effic_test, 1)
+ }
+ \donttest{
+    #Build charts with efficiency indicators with jackstrap method and heaviside criterion
+    hist_jack_step(efficiency, 1)
+    hist_jack_step(efficiency, 2)
+    hist_jack_step(efficiency, 3)
+    hist_jack_step(efficiency, 4)
+ }
 }

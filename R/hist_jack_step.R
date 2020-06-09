@@ -5,13 +5,25 @@
 #'complete sample and without outliers by heaviside step function; 2 - Histogram of efficiency with complete sample and without outliers
 #'by heaviside step function; 3 - Histogram of efficiency without ouliers by heaviside step function; 4 - Histogram of efficiency with complete sample.
 #'@return Return the plot with efficiency indicators with complete sample and/or without outliers by heaviside step function;
+#'@examples
+#'  \dontshow{
+#'    library(jackstrap)
+#'    test_data <- data.frame(mun=c(1:10), cod=c(1:10), y=c(5,7,6,7,4,6,8,9,3,1),
+#'                           x=c(7,8,10,22,15,7,22,17,10,5))
+#'    effic_test <- jackstrap (data=test_data, ycolumn=1, xcolumn=1, bootstrap=1,
+#'                   perc_sample_bubble=1, dea_method="crs", orientation_dea="in",
+#'                  n_seed = 2000, repos=FALSE, num_cores=1)
+#'    plot_step <- hist_jack_step(effic_test, 1)
+#'  }
+#'  \donttest{
+#'     #Build charts with efficiency indicators with jackstrap method and heaviside criterion
+#'     hist_jack_step(efficiency, 1)
+#'     hist_jack_step(efficiency, 2)
+#'     hist_jack_step(efficiency, 3)
+#'     hist_jack_step(efficiency, 4)
+#'  }
 #'@export
 hist_jack_step <- function(efficiency, model_hist_step) {
-
-  library("fBasics")
-  library("Benchmarking")
-  library(dplyr)
-  library("ggplot2")
 
   if (model_hist_step !=1 & model_hist_step !=2 & model_hist_step !=3 & model_hist_step !=4) {
     stop("Histogram model must be 1, 2, 3 or 4! Please change parameter: model_hist_step")
@@ -39,7 +51,7 @@ hist_jack_step <- function(efficiency, model_hist_step) {
 
   } else if (model_hist_step == 4) {
 
-    plot_hist_step <- hist(efficiency[["efficiency_step_func"]]$efficiency_complete,xlim=c(0,1),col='red',border=F, main = "Histogram of Efficiency complete sample", xlab = "Efficiency Indicator Intensity")
+    plot_hist_step <- hist(efficiency[["efficiency_step_func"]]$efficiency_complete,xlim=c(0,1),col='red',border=F, main = "Histogram of Efficiency with complete sample", xlab = "Efficiency Indicator Intensity")
   }
 
   return(plot_hist_step)

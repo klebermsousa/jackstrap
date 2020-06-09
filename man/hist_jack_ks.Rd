@@ -22,9 +22,22 @@ Histogram with Jackstrap Efficiency Indicators:  This function builds graphics w
 without outliers and complete sample. The outliers are defined by K-S Test.
 }
 \examples{
-hist_jack_ks(efficiency_ks, 1)
-hist_jack_ks(efficiency_ks, 2)
-hist_jack_ks(efficiency_ks, 3)
-hist_jack_ks(efficiency_ks, 4)
+ \dontshow{
+   library(jackstrap)
+   test_data <- data.frame(mun=c(1:10), cod=c(1:10), y=c(5,7,6,7,4,6,8,9,3,1),
+                          x=c(7,8,10,22,15,7,22,17,10,5))
+   effic_test <- jackstrap (data=test_data, ycolumn=1, xcolumn=1, bootstrap=1,
+                  perc_sample_bubble=1, dea_method="crs", orientation_dea="in",
+                 n_seed = 2000, repos=FALSE, num_cores=1)
+   effic_ks <- jackstrap_ks (data=test_data, jackstrap_obj=effic_test,
+                            num_cores = 1)
+   plot_ks <- hist_jack_ks(effic_ks, 1)
+ }
+ \donttest{
+    #Build charts with efficiency indicators with jackstrap method and K-S test criterion
+    hist_jack_ks(efficiency_ks, 1)
+    hist_jack_ks(efficiency_ks, 2)
+    hist_jack_ks(efficiency_ks, 3)
+    hist_jack_ks(efficiency_ks, 4)
+ }
 }
-

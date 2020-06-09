@@ -1,34 +1,67 @@
 #' Jackstrap Method: Tool identifies outliers in Nonparametric Frontier.
-#' This function applies the developed tecnique by Sousa and Stosic (2005)
-#' Technical Efficiency of the Brazilian Municipalites: Correcting Nonparametric
-#' Frontier Meansurements for Outliers
-#'@param data is the dataset with input and output used to mensure efficiency; Dataset need to have this form: 1th column: name of DMU (string); 2th column: code of DMU (integer); n columns of output variables; n columns of input variables.
+#' This function applies the developed technique by Sousa and Stosic (2005)
+#' Technical Efficiency of the Brazilian Municipalities: Correcting Nonparametric
+#' Frontier Measurements for Outliers.
+#'@param data is the dataset with input and output used to measure efficiency; Dataset need to have this form: 1th column: name of DMU (string); 2th column: code of DMU (integer); n columns of output variables; n columns of input variables.
 #'@param ycolumn is the quantity of y columns of dataset.
 #'@param xcolumn is the quantity of x columns of dataset.
 #'@param bootstrap is the quantity of applied resampling.
 #'@param perc_sample_bubble is the percentage of sample in each bubble.
-#'@param dea_method is the dea method: "crs" is DEA with constant returns to scale (CCR); "vrs" is DEA with varible returns to scale; and "fdh" is Free Disposal Hull (FDH) with variable returns to scale.
+#'@param dea_method is the dea method: "crs" is DEA with constant returns to scale (CCR); "vrs" is DEA with variable returns to scale; and "fdh" is Free Disposal Hull (FDH) with variable returns to scale.
 #'@param orientation_dea is the direction of the DEA: "in" for focus on inputs; and "out" for focus on outputs.
 #'@param n_seed is the code as seed used to get new random samples.
 #'@param repos identify if the resampling method is with reposition TRUE or not FALSE.
 #'@param num_cores is the number of cores available to process.
-#'@return Return the jackstrap object with follow informations: "parameters" contain the parameters used on function; "bootstrap" is quantity of applied resampling;
-#'"mean_leverage" is leverage average for each DMU; "mean_geral_leverage" is general average of leverage and step function threshold;
-#'"sum_leverage" is accrued leverage on all resampling for each DMU; "count_dmu" is amount of each DMU selected by bootstrap.
-#'"efficiency_step_func" are efficiency indicators obtained by heaviside step function criteria; "result_kstest_method" are p-values of K-S test obtained by removing sequencially one by one the high leverage DMU;
-#'"efficiency_ks_method" are efficiency indicators obtained by K-S test criteria.
+#'@return Return the jackstrap object with information as follows: "mean_leverage" is leverage average for each DMU;
+#'"mean_geral_leverage" is general average of leverage and step function threshold;
+#'"sum_leverage" is accrued leverage on all resampling for each DMU; "count_dmu" is amount of each DMU was selected by bootstrap.
+#'"count_dmu_zero" is amount of each DMU was selected by bootstrap but it did not influence in others. "ycolumn" is the number of output variables;
+#'"xcolumn" is the number of input variables; "perc_sample_bubble" is the percentage of sample used in each bubble;"dea_method" is the model used in DEA analysis;
+#'"orientation_dea" is the orientation of DEA; ""bootstrap" is the amount of bubble used by jackstrap method;
+#'"type_obj" is type of object; "size_bubble" is the amount of DMU used in each bubble.
+#'@examples
+#'  \dontshow{
+#'    library(jackstrap)
+#'    test_data <- data.frame(mun=c(1:10), cod=c(1:10), y=c(5,7,6,7,4,6,8,9,3,1),
+#'                            x=c(7,8,10,22,15,7,22,17,10,5))
+#'    effic_test <- jackstrap (data=test_data, ycolumn=1, xcolumn=1, bootstrap=1,
+#'                  perc_sample_bubble=1, dea_method="crs", orientation_dea="in",
+#'                  n_seed = 2000, repos=FALSE, num_cores=1)
+#'  }
+#'  \donttest{
+#'     # Examples with the municipalities data.
+#'     #Load package jackstrap
+#'     library(jackstrap)
+#'
+#'     #Load data example
+#'     municipalities <- jackstrap::municipalities
+#'
+#'     #Command measures efficiency with jackstrap method and heaviside criterion
+#'     efficiency <- jackstrap (data=municipalities, ycolumn=2, xcolumn=1, bootstrap=1000,
+#'                       perc_sample_bubble=0.20, dea_method="vrs", orientation_dea="in",
+#'                       n_seed = 2000, repos=FALSE, num_cores=4)
+#'  }
+#'@importFrom Benchmarking dea
+#'@importFrom dplyr arrange
+#'@importFrom doParallel registerDoParallel
+#'@importFrom foreach registerDoSEQ
+#'@importFrom stats runif
+#'@importFrom graphics hist
+#'@importFrom foreach %do%
+#'@importFrom foreach foreach
+#'@importFrom parallel mclapply
+#'@importFrom stats ks.test
+#'@importFrom dplyr select
+#'@importFrom dplyr %>%
+#'@importFrom dplyr everything
+#'@importFrom dplyr summarise
+#'@importFrom dplyr group_by
+#'@importFrom plyr desc
+#'@importFrom dplyr n
+#'@importFrom rlang .data
+#'@importFrom doParallel stopImplicitCluster
 #'@export
-jackstrap <- function(data, ycolumn, xcolumn, bootstrap=1000, perc_sample_bubble=0.2, dea_method='vrs', orientation_dea='in', n_seed=NULL, repos=FALSE, num_cores=1) {
-
-  library("fBasics")
-  library("Benchmarking")
-  library(dplyr)
-  library(foreach)
-  library(doParallel)
-  library(reshape)
-  library(tidyr)
-
-  start.time <- Sys.time()
+jackstrap <- function(data, ycolumn, xcolumn, bootstrap=1000, perc_sample_bubble=0.1, dea_method='vrs', orientation_dea='in', n_seed=NULL, repos=FALSE, num_cores=1) {
 
   if (is.null(n_seed)) {
 
@@ -47,7 +80,7 @@ jackstrap <- function(data, ycolumn, xcolumn, bootstrap=1000, perc_sample_bubble
   method_dea = dea_method
   orient_dea = orientation_dea
 
-  tamanho_bubble = n_row*perc_bubble
+  size_bubble = n_row*perc_bubble
 
   n_column_data <- ncol(dataset_orig)
 
@@ -58,7 +91,7 @@ jackstrap <- function(data, ycolumn, xcolumn, bootstrap=1000, perc_sample_bubble
 
   if (op_system=="Windows" & num_cores>1) {
     num_cores=1
-    print("The process will work with just one core. The package Jackstrap doesn't support multicore in Windows.")
+    warning("The process will work with just one core. The package Jackstrap does not support multicore in Windows.")
   }
 
   if (ycolumn == 0) {
@@ -73,13 +106,9 @@ jackstrap <- function(data, ycolumn, xcolumn, bootstrap=1000, perc_sample_bubble
     stop("Quantities of specified columns differ in the database! Please checking parameters.")
   }
 
-  message("Please wait a moment. Running... ")
-
   bubble_jacknife <- function(dmu_out) {
 
     i <- dmu_out
-
-    print(dmu_out)
 
     serial <- serial_bubble
 
@@ -120,9 +149,6 @@ jackstrap <- function(data, ycolumn, xcolumn, bootstrap=1000, perc_sample_bubble
     }
 
     dmu <- serial[i,]
-
-    # print(b)
-    # print(i)
 
     x <- x[-i,]
     y <- y[-i,]
@@ -218,7 +244,7 @@ jackstrap <- function(data, ycolumn, xcolumn, bootstrap=1000, perc_sample_bubble
   set.seed(n_seed)
   list_seed <- trunc(runif(n=bubble, min = 0, max = 1000000))
 
-  system.time(foreach (b=1:bubble) %do% {
+  foreach (b=1:bubble) %do% {
 
     if (b == 1) {
       total_levarage <- NULL
@@ -226,7 +252,7 @@ jackstrap <- function(data, ycolumn, xcolumn, bootstrap=1000, perc_sample_bubble
     }
 
     set.seed(list_seed[b])
-    dataset <- dataset_orig[sample(nrow(dataset_orig),tamanho_bubble, replace = repos),]
+    dataset <- dataset_orig[sample(nrow(dataset_orig),size_bubble, replace = repos),]
 
     dataset <- arrange(dataset,dataset$cod)
 
@@ -267,7 +293,7 @@ jackstrap <- function(data, ycolumn, xcolumn, bootstrap=1000, perc_sample_bubble
     }
 
     row_leverage_acum_knife <- NULL
-    system.time(results <- mclapply(list_dmu_out, bubble_jacknife, mc.cores = num_cores))
+    results <- mclapply(list_dmu_out, bubble_jacknife, mc.cores = num_cores)
 
     for (l in 1:n_row_bubble) {
       if (l == 1){
@@ -279,7 +305,9 @@ jackstrap <- function(data, ycolumn, xcolumn, bootstrap=1000, perc_sample_bubble
 
     row_leverage_acum <- rbind(row_leverage_acum, leverage_acum_bubble)
 
-  })
+  }
+
+  stopImplicitCluster()
 
   sum_leverage <- as.data.frame(row_leverage_acum %>%
                                   group_by(coddmu) %>%
@@ -392,10 +420,6 @@ jackstrap <- function(data, ycolumn, xcolumn, bootstrap=1000, perc_sample_bubble
   efficiency_semoutliers <- merge(efficiency_semoutliers, efficiency_comp, by.x = "codigo", by.y = "codigo", all.x = TRUE)
   colnames(efficiency_semoutliers) <- c("code","efficiency_withoutoutlier","efficiency_complete")
 
-  op <- options(warn = (-1))
-  result_kstest <- ks.test(efficiency_semoutliers$efficiency_withoutoutlier,efficiency_semoutliers$efficiency_complete)
-  options(op)
-
   mean_leverage <- arrange(mean_leverage, desc(mean))
 
   jackstrap_obj <- NULL
@@ -413,14 +437,7 @@ jackstrap <- function(data, ycolumn, xcolumn, bootstrap=1000, perc_sample_bubble
   jackstrap_obj[["orientation_dea"]] <- orientation_dea
   jackstrap_obj[["bootstrap"]] <- bubble
   jackstrap_obj[["type_obj"]] <- 'jackstrap_obj'
-  jackstrap_obj[["tamanho_bubble"]] <- tamanho_bubble
-
-  message("The process was completed with success! Please cite the original article this way: Sampaio de Sousa, M.C., & Stošić, B. (2005). Technical efficiency of the Brazilian municipalities: correcting nonparametric frontier measurements for outliers. Journal of Productivity Analysis, 24(2), 157-181.")
-
-  end.time <- Sys.time()
-  time.taken <- end.time - start.time
-  print(time.taken)
-
+  jackstrap_obj[["size_bubble"]] <- size_bubble
 
   return(jackstrap_obj)
 

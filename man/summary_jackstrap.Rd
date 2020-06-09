@@ -5,23 +5,36 @@
 \title{Summary Jackstrap:  This function shows the main outcomes with outlier technique developed by
 Sousa and Stosic(2005).}
 \usage{
-summary_jackstrap(object_jackstrap)
+summary_jackstrap(object_jackstrap, data)
 }
 \arguments{
 \item{object_jackstrap}{is the jackstrap object created by jackstrap function.}
+
 \item{data}{is the dataset of research.}
 }
 \value{
-Return the data frame with follow informations: "parameters" contain the parameters used on function;
-"outliers_by_step_func" are the outliers by heaviside step function criteria; "outliers_by_ks" are the outliers by K-S test;
-"dmu_efficiency_by_step_func" are DMUs evaluated as efficients by heaviside step function criteria; "dmu_inefficiency_by_step_func" are the DMUs evaluated as maximum inefficient by heaviside step function criteria;
-"dmu_efficiency_ks" are DMUs evaluated as efficients by K-S test criteria; "dmu_inefficiency_by_ks" are the DMUs evaluated as maximum inefficient by K-S test criteria.
+Return the data frame with information as follows: "outliers_by_step_func" are the outliers by heaviside step function criterion;
+"outliers_by_ks" are the outliers by K-S test; "dmu_efficiency_by_step_func" are DMUs evaluated as efficient by heaviside step function criterion;
+"dmu_inefficiency_by_step_func" are the DMUs evaluated as maximum inefficient by heaviside step function criterion;
+"dmu_efficiency_ks" are DMUs evaluated as efficient by K-S test criterion; "dmu_inefficiency_by_ks" are the DMUs evaluated as maximum inefficient by K-S test criterion.
 }
 \description{
 Summary Jackstrap:  This function shows the main outcomes with outlier technique developed by
 Sousa and Stosic(2005).
 }
 \examples{
-summary_efic <- summary_jackstrap(efficiency_ks)
+ \dontshow{
+   library(jackstrap)
+   test_data <- data.frame(mun=c(1:10), cod=c(1:10), y=c(5,7,6,7,4,6,8,9,3,1),
+                           x=c(7,8,10,22,15,7,22,17,10,5))
+   effic_test <- jackstrap (data=test_data, ycolumn=1, xcolumn=1, bootstrap=1,
+                  perc_sample_bubble=1, dea_method="crs", orientation_dea="in",
+                 n_seed = 2000, repos=FALSE, num_cores=1)
+   effic_ks <- jackstrap_ks (data=test_data, jackstrap_obj=effic_test,
+                            num_cores = 1)
+ }
+ \donttest{
+    #Create object with the resume of efficiency measurement.
+    summary_efficiency <- summary_jackstrap(efficiency_ks, municipalities)
+ }
 }
-

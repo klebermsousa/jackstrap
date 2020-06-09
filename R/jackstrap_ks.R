@@ -1,21 +1,33 @@
 #' Jackstrap KS Method: Tool identifies outliers in Nonparametric Frontier.
-#' This function applies the developed tecnique by Sousa and Stosic (2005)
-#' Technical Efficiency of the Brazilian Municipalites: Correcting Nonparametric
-#' Frontier Meansurements for Outliers and to use the K-S test with criteria to define outliers
-#'@param data is the dataset with input and output used to mensure efficiency; Dataset need to have this form: 1th column: name of DMU (string); 2th column: code of DMU (integer); n columns of output variables; n columns of input variables.
+#' This function applies the developed technique by Sousa and Stosic (2005)
+#' Technical Efficiency of the Brazilian Municipalities: Correcting Nonparametric
+#' Frontier Meansurements for Outliers and to use the K-S test with criterion to define outliers.
+#'@param data is the dataset with input and output used to measure efficiency; Dataset need to have this form: 1th column: name of DMU (string); 2th column: code of DMU (integer); n columns of output variables; n columns of input variables.
 #'@param jackstrap_obj is the object created by the function jackstrap.
 #'@param num_cores is the number of cores available to process.
-#'@return Return the jackstrap object increased with follow informations: "result_kstest_method" are p-values of K-S test obtained by removing sequencially one by one the high leverage DMU;
-#'"efficiency_ks_method" are efficiency indicators obtained by K-S test criteria.
+#'@param perc is the percentage of DMU analyzed by K-S test.
+#'@return Return the jackstrap object increased with informations as follows: "result_kstest_method" is p-values of K-S test obtained by removing sequencially one by one the high leverage DMU;
+#'"efficiency_ks_method" is efficiency indicators obtained by K-S test criterion.
+#'@examples
+#'  \dontshow{
+#'    library(jackstrap)
+#'    test_data <- data.frame(mun=c(1:10), cod=c(1:10), y=c(5,7,6,7,4,6,8,9,3,1),
+#'                            x=c(7,8,10,22,15,7,22,17,10,5))
+#'    effic_test <- jackstrap (data=test_data, ycolumn=1, xcolumn=1, bootstrap=1,
+#'                  perc_sample_bubble=1, dea_method="crs", orientation_dea="in",
+#'                  n_seed = 2000, repos=FALSE, num_cores=1)
+#'    effic_ks <- jackstrap_ks (data=test_data, jackstrap_obj=effic_test,
+#'                               num_cores = 1)
+#'  }
+#'  \donttest{
+#'     #Command measures efficiency with jackstrap method and K-S test criterion
+#'     efficiency_ks <- jackstrap_ks (data=municipalities, jackstrap_obj=efficiency,
+#'                                    num_cores = 4)
+#'  }
+#'@importFrom stats quantile
+#'@importFrom doParallel stopImplicitCluster
 #'@export
-jackstrap_ks <- function(data, jackstrap_obj, num_cores=1, perc=0.80) {
-
-
-  library("fBasics")
-  library("Benchmarking")
-  library(dplyr)
-  library(foreach)
-  library(doParallel)
+jackstrap_ks <- function(data, jackstrap_obj, num_cores=1, perc=0.90) {
 
   data_orig <- data
 
@@ -29,7 +41,7 @@ jackstrap_ks <- function(data, jackstrap_obj, num_cores=1, perc=0.80) {
   orient_dea = jackstrap_obj[['orientation_dea']]
   efficiency_comp_ks <- jackstrap_obj[['efficiency_comp']]
 
-  tamanho_bubble = n_linha*perc_bubble
+  size_bubble = n_linha*perc_bubble
 
 
   jackstrap_ks <- function (dmu_out_t) {
@@ -113,9 +125,7 @@ jackstrap_ks <- function(data, jackstrap_obj, num_cores=1, perc=0.80) {
     efficiency_semoutliers_ks <- merge(efficiency_semoutliers_ks, efficiency_semoutliers_ks_before, by.x = "codigo", by.y = "codigo", all.x = TRUE)
     colnames(efficiency_semoutliers_ks) <- c("code","efficiency_withoutoutlier_ks","efficiency_before")
 
-    op <- options(warn = (-1))
     result_kstest_ks <- ks.test(efficiency_semoutliers_ks$efficiency_withoutoutlier_ks,efficiency_semoutliers_ks$efficiency_before)
-    options(op)
 
     ks_test_rrow <- data.frame(cod_dmu_analise,result_kstest_ks[["p.value"]])
     ks_test_accrued <- rbind(ks_test_accrued, ks_test_rrow)
@@ -148,6 +158,8 @@ jackstrap_ks <- function(data, jackstrap_obj, num_cores=1, perc=0.80) {
     linha_pvalue_ks <- results_ks[[l]]
     acum_pvalue_ks <- rbind(acum_pvalue_ks, linha_pvalue_ks)
   }
+
+  stopImplicitCluster()
 
     ks_test_accrued <- acum_pvalue_ks
     acum_pvalue_ks <- NULL

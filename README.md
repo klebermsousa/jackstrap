@@ -19,7 +19,7 @@ data(municipalities)
 
 efficiency <- jackstrap (data=municipalities, ycolumn=2, xcolumn=1, bootstrap=1000, perc_sample_bubble=0.10, dea_method="vrs", orientation_dea="in", n_seed = 2000, repos=FALSE, num_cores=4)
 ```
-The function jackstrap_ks is usefull to get efficiency index with criteria K-S test, as follow:
+The function jackstrap_ks is usefull to get efficiency index with criteria K-S test, as follows:
 
 ```{r}
 efficiency_ks <- jackstrap_ks (data=municipalities, jackstrap_obj=efficiency, num_cores = 4, perc = 0.80)

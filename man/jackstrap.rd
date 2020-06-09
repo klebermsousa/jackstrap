@@ -2,18 +2,26 @@
 % Please edit documentation in R/jackstrap.R
 \name{jackstrap}
 \alias{jackstrap}
-\title{Jackstrap Method: The tool identifies outliers in Nonparametric Frontier.
-This function applies the developed tecnique by Sousa and Stosic (2005)
-Technical Efficiency of the Brazilian Municipalites: Correcting Nonparametric
-Frontier Meansurements for Outliers}
+\title{Jackstrap Method: Tool identifies outliers in Nonparametric Frontier.
+This function applies the developed technique by Sousa and Stosic (2005)
+Technical Efficiency of the Brazilian Municipalities: Correcting Nonparametric
+Frontier Measurements for Outliers.}
 \usage{
-jackstrap(data, ycolumn, xcolumn, bootstrap = 1000,
-  perc_sample_buble = 0.2, dea_method = "vrs",
-  orientation_dea = "in", n_seed = NULL, repos = FALSE,
-  num_cores = 1)
+jackstrap(
+  data,
+  ycolumn,
+  xcolumn,
+  bootstrap = 1000,
+  perc_sample_bubble = 0.1,
+  dea_method = "vrs",
+  orientation_dea = "in",
+  n_seed = NULL,
+  repos = FALSE,
+  num_cores = 1
+)
 }
 \arguments{
-\item{data}{is the dataset with input and output used to mensure efficiency; Dataset needs to have this form: 1th column: name of DMU (string); 2th column: code of DMU (integer); n columns of output variables; n columns of input variables.}
+\item{data}{is the dataset with input and output used to measure efficiency; Dataset need to have this form: 1th column: name of DMU (string); 2th column: code of DMU (integer); n columns of output variables; n columns of input variables.}
 
 \item{ycolumn}{is the quantity of y columns of dataset.}
 
@@ -21,35 +29,53 @@ jackstrap(data, ycolumn, xcolumn, bootstrap = 1000,
 
 \item{bootstrap}{is the quantity of applied resampling.}
 
-\item{perc_sample_buble}{is the percentage of sample in each bubble.}
+\item{perc_sample_bubble}{is the percentage of sample in each bubble.}
 
-\item{dea_method}{is the DEA method: "crs" is DEA with constant returns to scale (CCR); "vrs" is DEA with varible returns to scale; and "fdh" is Free Disposal Hull (FDH) with variable returns to scale.}
+\item{dea_method}{is the dea method: "crs" is DEA with constant returns to scale (CCR); "vrs" is DEA with variable returns to scale; and "fdh" is Free Disposal Hull (FDH) with variable returns to scale.}
 
 \item{orientation_dea}{is the direction of the DEA: "in" for focus on inputs; and "out" for focus on outputs.}
 
 \item{n_seed}{is the code as seed used to get new random samples.}
 
-\item{repos}{identify if the resampling method is with replacement TRUE or not FALSE.}
+\item{repos}{identify if the resampling method is with reposition TRUE or not FALSE.}
 
 \item{num_cores}{is the number of cores available to process.}
 }
 \value{
-Return the jackstrap object with follow informations: "parameters" contain the parameters used on function; "bootstrap" is quantity of applied resampling;
-"mean_leverage" is leverage average for each DMU; "mean_geral_leverage" is general average of leverage and step function threshold;
-"sum_leverage" is accrued leverage on all resampling for each DMU; "count_dmu" is amount of each DMU selected by bootstrap.
-"efficiency_step_func" are efficiency indicators obtained by heaviside step function criteria; "result_kstest_method" are p-values of K-S test obtained by removing sequencially one by one the high leverage DMU;
-"efficiency_ks_method" are efficiency indicators obtained by K-S test criteria.
+Return the jackstrap object with information as follows: "mean_leverage" is leverage average for each DMU;
+"mean_geral_leverage" is general average of leverage and step function threshold;
+"sum_leverage" is accrued leverage on all resampling for each DMU; "count_dmu" is amount of each DMU was selected by bootstrap.
+"count_dmu_zero" is amount of each DMU was selected by bootstrap but it did not influence in others. "ycolumn" is the number of output variables;
+"xcolumn" is the number of input variables; "perc_sample_bubble" is the percentage of sample used in each bubble;"dea_method" is the model used in DEA analysis;
+"orientation_dea" is the orientation of DEA; ""bootstrap" is the amount of bubble used by jackstrap method;
+"type_obj" is type of object; "size_bubble" is the amount of DMU used in each bubble.
 }
 \description{
 Jackstrap Method: Tool identifies outliers in Nonparametric Frontier.
-This function applies the developed tecnique by Sousa and Stosic (2005)
-Technical Efficiency of the Brazilian Municipalites: Correcting Nonparametric
-Frontier Meansurements for Outliers
+This function applies the developed technique by Sousa and Stosic (2005)
+Technical Efficiency of the Brazilian Municipalities: Correcting Nonparametric
+Frontier Measurements for Outliers.
 }
 \examples{
-municipalities <- as.data.frame(jackstrap::municipalities)
+ \dontshow{
+   library(jackstrap)
+   test_data <- data.frame(mun=c(1:10), cod=c(1:10), y=c(5,7,6,7,4,6,8,9,3,1),
+                           x=c(7,8,10,22,15,7,22,17,10,5))
+   effic_test <- jackstrap (data=test_data, ycolumn=1, xcolumn=1, bootstrap=1,
+                 perc_sample_bubble=1, dea_method="crs", orientation_dea="in",
+                 n_seed = 2000, repos=FALSE, num_cores=1)
+ }
+ \donttest{
+    # Examples with the municipalities data.
+    #Load package jackstrap
+    library(jackstrap)
 
-efficiency <- jackstrap (data=municipalities, ycolumn=2, xcolumn=1, bootstrap=500,
-                         perc_sample_bubble=0.10, dea_method="vrs",
-                         orientation_dea="in", n_seed = 2000, repos=FALSE, num_cores=4)
+    #Load data example
+    municipalities <- jackstrap::municipalities
+
+    #Command measures efficiency with jackstrap method and heaviside criterion
+    efficiency <- jackstrap (data=municipalities, ycolumn=2, xcolumn=1, bootstrap=1000,
+                      perc_sample_bubble=0.20, dea_method="vrs", orientation_dea="in",
+                      n_seed = 2000, repos=FALSE, num_cores=4)
+ }
 }
